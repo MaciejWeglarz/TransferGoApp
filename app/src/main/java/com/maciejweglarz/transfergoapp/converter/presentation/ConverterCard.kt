@@ -1,6 +1,7 @@
 package com.example.converter
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,8 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -49,6 +48,10 @@ fun ConverterCard(
     onReverseClick: () -> Unit,
     onSendingAmountChange: (String) -> Unit,
     onReceiverAmountChange: (String) -> Unit,
+    sendingFlagRes: Int,
+    receiverFlagRes: Int,
+    onSendingCurrencyClick: () -> Unit = {},
+    onReceiverCurrencyClick: () -> Unit = {},
     hasError: Boolean = false
 ) {
     Box(
@@ -80,10 +83,11 @@ fun ConverterCard(
             ) {
                 CurrencySection(
                     title = sendingLabel,
-                    countryFlags = painterResource(R.drawable.flag_uah),
+                    flagRes = sendingFlagRes,
                     currencyCode = sendingCurrencyCode,
                     amount = sendingAmount,
                     onAmountChange = onSendingAmountChange,
+                    onCurrencyClick = onSendingCurrencyClick,
                     amountColor = Color(0xFF0084FF),
                     backgroundColor = Color.White,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -92,10 +96,11 @@ fun ConverterCard(
 
                 CurrencySection(
                     title = receiverLabel,
-                    countryFlags = painterResource(R.drawable.flag_uah),
+                    flagRes = receiverFlagRes,
                     currencyCode = receiverCurrencyCode,
                     amount = receiverAmount,
                     onAmountChange = onReceiverAmountChange,
+                    onCurrencyClick = onReceiverCurrencyClick,
                     amountColor = Color.Black,
                     backgroundColor = Color.LightGray,
                     shape = null,
@@ -110,15 +115,20 @@ fun ConverterCard(
                 .padding(horizontal = 32.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.reverse_button),
-                contentDescription = "Reverse currencies",
-                modifier = Modifier
-                    .offset(x = (-64).dp)
-                    .size(32.dp)
-                    .clickable { onReverseClick() }
-            )
 
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { onReverseClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.reverse_button),
+                    contentDescription = "Reverse currencies",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
 
             Surface(
@@ -142,14 +152,15 @@ fun ConverterCard(
 @Composable
 private fun CurrencySection(
     title: String,
-    countryFlags: Painter,
+    @DrawableRes flagRes: Int,
     currencyCode: String,
     amount: String,
     amountColor: Color,
     backgroundColor: Color?,
     shape: Shape?,
     modifier: Modifier = Modifier,
-    onAmountChange: (String) -> Unit
+    onAmountChange: (String) -> Unit,
+    onCurrencyClick: () -> Unit
 ) {
     Box(
         modifier = modifier
@@ -180,7 +191,8 @@ private fun CurrencySection(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onCurrencyClick() }
                 ) {
                     Box(
                         modifier = Modifier
@@ -188,7 +200,7 @@ private fun CurrencySection(
                             .clip(RoundedCornerShape(50))
                     ) {
                         Image(
-                            painter = countryFlags,
+                            painter = painterResource(flagRes),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -279,7 +291,9 @@ fun ConverterCardPreview() {
                 rateLabel = "1 PLN = 7.23 UAH",
                 onReverseClick = {},
                 onSendingAmountChange = {},
-                onReceiverAmountChange = {}
+                onReceiverAmountChange = {},
+                sendingFlagRes = R.drawable.flag_pol,
+                receiverFlagRes = R.drawable.flag_uah
             )
         }
     }
