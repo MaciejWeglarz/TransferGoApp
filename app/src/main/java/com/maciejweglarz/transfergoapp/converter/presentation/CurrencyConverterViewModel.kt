@@ -102,5 +102,36 @@ class CurrencyConverterViewModel @Inject constructor(
         }
     }
 
+    fun reverseConvert() {
+        val current = _state.value
+        val amount = current.amountTo
+            .replace(',', '.')
+            .toDoubleOrNull() ?: return
 
+        viewModelScope.launch {
+            _state.value = current.copy(loading = true, error = null)
+
+            try {
+                val quote = convertCurrencyUseCase(
+                    from = current.toCurrency,
+                    to = current.fromCurrency,
+                    amount = amount
+                )
+
+                _state.value = _state.value.copy(
+                    amountTo = String.format("%.2f", quote.amountFrom),
+                    amountFrom = String.format("%.2f", quote.amountTo),
+                    rateText = "1 ${quote.fromCurrency} = ${quote.rate} ${quote.toCurrency}",
+                    loading = false
+                )
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = e.message ?: "error"
+                )
+            }
+        }
+    }
 }

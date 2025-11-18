@@ -23,9 +23,15 @@ fun ConverterScreen(
 
     ConverterScreenContent(
         state = state,
+        onSendingAmountChange = {value ->
+            viewModel.onSendingAmountChange(value)
+            viewModel.convert()
+        },
+        onReceiverAmountChange = { value ->
+            viewModel.onReceiverAmountChange(value)
+            viewModel.reverseConvert()
+        },
         onReverseClick = { viewModel.onReverseClick() },
-        onSendingAmountChange = { viewModel.onSendingAmountChange(it) },
-        onReceiverAmountChange = { viewModel.onReceiverAmountChange(it) }
     )
 }
 
