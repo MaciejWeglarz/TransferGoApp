@@ -7,8 +7,8 @@ interface TransferGoApiService {
 
     @GET("api/fx-rates")
     suspend fun getFxRates(
-        @Query("from") from: String,
-        @Query("to") to: String,
+        @Query("from") fromCurrency: String,
+        @Query("to") toCurrency: String,
         @Query("amount") amount: Double
     ): FxRateResponse
 

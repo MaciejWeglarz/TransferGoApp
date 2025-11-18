@@ -9,21 +9,20 @@ class CurrencyRepositoryImpl @Inject constructor(
     private val api: TransferGoApiService
 ): CurrencyRepository {
     override suspend fun getQuote(
-        from: String,
-        to: String,
+        fromCurrency: String,
+        toCurrency: String,
         amount: Double
     ): FxQuote {
 
-        val response = api.getFxRates(from, to, amount)
+        val response = api.getFxRates(fromCurrency, toCurrency, amount)
 
         val rate = response.rate
-        val fromAmount = response.fromAmount ?: amount
-        val toAmount = response.toAmount ?: (rate * amount)
+        val toAmount = response.toAmount
 
         return FxQuote(
-            from,
-            toCurrency = to,
-            amountFrom = fromAmount,
+            fromCurrency,
+            toCurrency = toCurrency,
+            amountFrom = amount,
             amountTo = toAmount,
             rate = rate
         )
