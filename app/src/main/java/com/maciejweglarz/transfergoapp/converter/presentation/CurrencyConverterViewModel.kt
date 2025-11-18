@@ -2,6 +2,7 @@ package com.maciejweglarz.transfergoapp.converter.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.maciejweglarz.transfergoapp.core.model.Currencies
 import com.maciejweglarz.transfergoapp.converter.domain.model.FxQuote
 import com.maciejweglarz.transfergoapp.converter.domain.usecase.ConvertCurrencyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -73,15 +74,6 @@ class CurrencyConverterViewModel @Inject constructor(
         _state.value = _state.value.copy(error = null)
     }
 
-    private fun maxLimitFor(currency: String): Double =
-        when (currency) {
-            "PLN" -> 20000.0
-            "EUR" -> 5000.0
-            "GBP" -> 1000.0
-            "UAH" -> 50000.0
-            else -> Double.MAX_VALUE
-        }
-
     private fun mapError(e: Throwable): String {
         return when (e) {
             is HttpException -> {
@@ -107,13 +99,15 @@ class CurrencyConverterViewModel @Inject constructor(
             .replace(',', '.')
             .toDoubleOrNull() ?: return
 
-        val max = maxLimitFor(currentState.fromCurrency)
+        val currencyConfig = Currencies.getByCode(currentState.fromCurrency)
+        val max = currencyConfig.maxAmount
         if (amount > max) {
             _state.value = currentState.copy(
-                error = "Maximum sending amount: ${max.toInt()} ${currentState.fromCurrency}"
+                error = "Maximum sending amount: ${max.toInt()} ${currencyConfig.code}"
             )
             return
         }
+
 
         viewModelScope.launch {
             _state.value = currentState.copy(loading = true, error = null)
