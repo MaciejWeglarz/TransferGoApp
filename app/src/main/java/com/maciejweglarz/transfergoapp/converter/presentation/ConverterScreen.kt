@@ -2,6 +2,7 @@ package com.maciejweglarz.transfergoapp.converter.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,18 +64,35 @@ private fun ConverterScreenContent(
                 rateLabel = state.rateText,
                 onReverseClick = onReverseClick,
                 onSendingAmountChange = onSendingAmountChange,
-                onReceiverAmountChange = onReceiverAmountChange
+                onReceiverAmountChange = onReceiverAmountChange,
+                hasError = state.error != null
             )
 
             state.error?.let { errorMsg ->
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = errorMsg,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+                ErrorBanner(message = errorMsg)
             }
         }
+    }
+}
+
+@Composable
+private fun ErrorBanner(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                color = Color(0xFFFFF0F4),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = message,
+            color = Color(0xFFFF4F9A),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

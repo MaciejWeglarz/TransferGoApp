@@ -3,11 +3,13 @@ package com.example.converter
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,7 +48,8 @@ fun ConverterCard(
     rateLabel: String,
     onReverseClick: () -> Unit,
     onSendingAmountChange: (String) -> Unit,
-    onReceiverAmountChange: (String) -> Unit
+    onReceiverAmountChange: (String) -> Unit,
+    hasError: Boolean = false
 ) {
     Box(
         modifier = modifier.padding(16.dp)
@@ -53,7 +57,18 @@ fun ConverterCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(200.dp)
+                .then(
+                    if (hasError) {
+                        Modifier.border(
+                            width = 2.dp,
+                            color = Color(0xFFFF4F9A),
+                            shape = RoundedCornerShape(24.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                ),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFF1F4F8)
@@ -101,7 +116,7 @@ fun ConverterCard(
                 modifier = Modifier
                     .offset(x = (-64).dp)
                     .size(32.dp)
-                    .clickable{ onReverseClick() }
+                    .clickable { onReverseClick() }
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -191,8 +206,14 @@ private fun CurrencySection(
 
             BasicTextField(
                 value = amount,
-                onValueChange = { onAmountChange(it) },
+                onValueChange = { newValue ->
+                    val cleanedUserInput = sanitizeAmountInput(newValue)
+                    onAmountChange(cleanedUserInput)
+                },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .fillMaxWidth(0.5f),
@@ -214,6 +235,24 @@ private fun CurrencySection(
             )
         }
     }
+}
+
+private fun sanitizeAmountInput(raw: String): String {
+    var separatorSeen = false
+    val result = StringBuilder()
+
+    for (char in raw) {
+        when {
+            char.isDigit() -> result.append(char)
+            (char == '.' || char == ',') && !separatorSeen -> {
+                result.append(char)
+                separatorSeen = true
+            }
+            else -> Unit
+        }
+    }
+
+    return result.toString()
 }
 
 @Preview(showBackground = true)
