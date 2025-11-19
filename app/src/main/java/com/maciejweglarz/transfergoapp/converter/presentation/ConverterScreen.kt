@@ -2,33 +2,30 @@ package com.maciejweglarz.transfergoapp.converter.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.converter.ConverterCard
 import com.maciejweglarz.transfergoapp.core.model.Currencies
-import com.maciejweglarz.transfergoapp.ui.theme.TransferGoAppTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import com.maciejweglarz.transfergoapp.core.model.Currency
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import com.maciejweglarz.transfergoapp.ui.theme.TransferGoAppTheme
 
 private enum class PickerTarget {
     FROM, TO
@@ -42,11 +39,12 @@ fun ConverterScreen(
     val state by viewModel.state.collectAsState()
 
     var pickerTarget by remember { mutableStateOf<PickerTarget?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ConverterScreenContent(
         state = state,
-        onSendingAmountChange = {value ->
+        onSendingAmountChange = { value ->
             viewModel.onSendingAmountChange(value)
             viewModel.convert()
         },
@@ -60,11 +58,24 @@ fun ConverterScreen(
     )
 
     if (pickerTarget != null) {
+
+        val title = when (pickerTarget) {
+            PickerTarget.FROM -> "Sending from"
+            PickerTarget.TO -> "Receiver gets"
+            null -> ""
+        }
+
         CurrencyPickerBottomSheet(
             sheetState = sheetState,
-            onDismiss = { pickerTarget = null },
+            title = title,
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            onDismiss = {
+                searchQuery = ""
+                pickerTarget = null
+            },
             onCurrencySelected = { currency ->
-                when(pickerTarget) {
+                when (pickerTarget) {
                     PickerTarget.FROM -> {
                         viewModel.updateCurrencies(
                             from = currency.code,
@@ -72,6 +83,7 @@ fun ConverterScreen(
                         )
                         viewModel.convert()
                     }
+
                     PickerTarget.TO -> {
                         viewModel.updateCurrencies(
                             from = state.fromCurrency,
@@ -79,8 +91,10 @@ fun ConverterScreen(
                         )
                         viewModel.convert()
                     }
+
                     null -> Unit
                 }
+                searchQuery = ""
                 pickerTarget = null
             }
         )
@@ -160,6 +174,9 @@ private fun ErrorBanner(message: String) {
 @Composable
 private fun CurrencyPickerBottomSheet(
     sheetState: SheetState,
+    title: String,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onCurrencySelected: (Currency) -> Unit
 ) {
@@ -170,9 +187,55 @@ private fun CurrencyPickerBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .fillMaxHeight(0.95f)
+                .padding(bottom = 16.dp)
         ) {
-            Currencies.list.forEach { currency ->
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .wrapContentWidth(Alignment.CenterHorizontally),
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Search",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8C9199),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            SearchField(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "All countries",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF8C9199),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val filteredCurrencies = Currencies.list.filter { currency ->
+                if (searchQuery.isBlank()) return@filter true
+                val q = searchQuery.trim()
+                currency.country.contains(q, ignoreCase = true) ||
+                        currency.code.contains(q, ignoreCase = true) ||
+                        currency.name.contains(q, ignoreCase = true)
+            }
+
+            filteredCurrencies.forEach { currency ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -205,6 +268,37 @@ private fun CurrencyPickerBottomSheet(
     }
 }
 
+@Composable
+private fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(Color(0xFFEDF0F4), RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        textStyle = MaterialTheme.typography.bodyMedium
+    ) { inner ->
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            if (query.isEmpty()) {
+                Text(
+                    text = "Search",
+                    color = Color(0xFF8C9199),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            inner()
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -220,7 +314,7 @@ private fun ConverterScreenPreview() {
                 loading = false,
                 error = null
             ),
-            onReverseClick =  {},
+            onReverseClick = {},
             onSendingAmountChange = {},
             onReceiverAmountChange = {},
             onSendingCurrencyClick = {},

@@ -102,7 +102,7 @@ fun ConverterCard(
                     onAmountChange = onReceiverAmountChange,
                     onCurrencyClick = onReceiverCurrencyClick,
                     amountColor = Color.Black,
-                    backgroundColor = Color.LightGray,
+                    backgroundColor = Color(0xFFEDF0F4),
                     shape = null,
                     modifier = Modifier.weight(1f)
                 )
@@ -212,6 +212,14 @@ private fun CurrencySection(
                         fontSize = 16.sp,
                         fontFamily = AppFont,
                         fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    Spacer(modifier = Modifier.padding(4.dp))
+
+                    Image(
+                        painter = painterResource(R.drawable.icon_down),
+                        contentDescription = "Open currency picker",
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
