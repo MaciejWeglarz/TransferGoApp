@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.maciejweglarz.transfergoapp.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.converter.ConverterCard
 import com.maciejweglarz.transfergoapp.core.model.Currencies
@@ -44,6 +45,7 @@ fun ConverterScreen(
 
     ConverterScreenContent(
         state = state,
+        onReverseClick = { viewModel.onReverseClick() },
         onSendingAmountChange = { value ->
             viewModel.onSendingAmountChange(value)
             viewModel.convert()
@@ -52,9 +54,9 @@ fun ConverterScreen(
             viewModel.onReceiverAmountChange(value)
             viewModel.reverseConvert()
         },
-        onReverseClick = { viewModel.onReverseClick() },
         onSendingCurrencyClick = { pickerTarget = PickerTarget.FROM },
-        onReceiverCurrencyClick = { pickerTarget = PickerTarget.TO }
+        onReceiverCurrencyClick = { pickerTarget = PickerTarget.TO },
+        onDismissNetworkBanner = { viewModel.dismissNoNetworkBanner() }
     )
 
     if (pickerTarget != null) {
@@ -108,7 +110,8 @@ private fun ConverterScreenContent(
     onSendingAmountChange: (String) -> Unit,
     onReceiverAmountChange: (String) -> Unit,
     onSendingCurrencyClick: () -> Unit,
-    onReceiverCurrencyClick: () -> Unit
+    onReceiverCurrencyClick: () -> Unit,
+    onDismissNetworkBanner: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -119,7 +122,16 @@ private fun ConverterScreenContent(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            if (state.showNoNetworkBanner) {
+                NetworkBanner(
+                    onCloseClick = onDismissNetworkBanner
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            } else {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             val fromCurrencyConfig = Currencies.getByCode(state.fromCurrency)
             val toCurrencyConfig = Currencies.getByCode(state.toCurrency)
@@ -147,6 +159,52 @@ private fun ConverterScreenContent(
                 ErrorBanner(message = errorMsg)
             }
         }
+    }
+}
+
+@Composable
+private fun NetworkBanner(
+    onCloseClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFFFE5E5))
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(R.drawable.icon_network_banner),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "No network",
+                color = Color(0xFFB00020),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Check your internet connection",
+                color = Color(0xFFB00020),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Image(
+            painterResource(R.drawable.icon_close),
+            contentDescription = "Close banner",
+            modifier = Modifier
+                .size(20.dp)
+                .clickable { onCloseClick() }
+        )
     }
 }
 
@@ -187,7 +245,7 @@ private fun CurrencyPickerBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.95f)
+                .fillMaxHeight(0.95f) // stała wysokość, brak „kurczenia się” przy search
                 .padding(bottom = 16.dp)
         ) {
             Text(
@@ -235,7 +293,7 @@ private fun CurrencyPickerBottomSheet(
                         currency.name.contains(q, ignoreCase = true)
             }
 
-            filteredCurrencies.forEach { currency ->
+            filteredCurrencies.forEachIndexed { index, currency ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -263,7 +321,17 @@ private fun CurrencyPickerBottomSheet(
                         )
                     }
                 }
+
+                if (index < filteredCurrencies.lastIndex) {
+                    androidx.compose.material3.HorizontalDivider(
+                        color = Color(0xFFE4E7EB),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                    )
+                }
             }
+
+
         }
     }
 }
@@ -284,21 +352,35 @@ private fun SearchField(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         textStyle = MaterialTheme.typography.bodyMedium
     ) { inner ->
-        Box(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (query.isEmpty()) {
-                Text(
-                    text = "Search",
-                    color = Color(0xFF8C9199),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            Image(
+                painter = painterResource(id = R.drawable.icon_search),
+                contentDescription = "Search",
+                modifier = Modifier.size(16.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                if (query.isEmpty()) {
+                    Text(
+                        text = "Search",
+                        color = Color(0xFF8C9199),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                inner()
             }
-            inner()
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -312,13 +394,15 @@ private fun ConverterScreenPreview() {
                 amountTo = "723.38",
                 rateText = "1 PLN = 7.23 UAH",
                 loading = false,
-                error = null
+                error = null,
+                showNoNetworkBanner = true
             ),
             onReverseClick = {},
             onSendingAmountChange = {},
             onReceiverAmountChange = {},
             onSendingCurrencyClick = {},
-            onReceiverCurrencyClick = {}
+            onReceiverCurrencyClick = {},
+            onDismissNetworkBanner = {}
         )
     }
 }
