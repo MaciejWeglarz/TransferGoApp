@@ -3,16 +3,17 @@ package com.maciejweglarz.transfergoapp.converter.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maciejweglarz.transfergoapp.core.model.Currencies
+import com.maciejweglarz.transfergoapp.core.network.ConnectivityObserver
 import com.maciejweglarz.transfergoapp.converter.domain.model.FxQuote
 import com.maciejweglarz.transfergoapp.converter.domain.usecase.ConvertCurrencyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.UnknownHostException
+import javax.inject.Inject
 
 data class ConverterUiState(
     val fromCurrency: String = "PLN",
@@ -21,20 +22,36 @@ data class ConverterUiState(
     val amountTo: String = "0.00",
     val rateText: String = "",
     val loading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isNetworkAvailable: Boolean = true,
+    val showNoNetworkBanner: Boolean = false
 )
-
 
 @HiltViewModel
 class CurrencyConverterViewModel @Inject constructor(
-    private val convertCurrencyUseCase: ConvertCurrencyUseCase
-): ViewModel() {
+    private val convertCurrencyUseCase: ConvertCurrencyUseCase,
+    private val connectivityObserver: ConnectivityObserver
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ConverterUiState())
     val state: StateFlow<ConverterUiState> = _state
 
     init {
+        observeNetwork()
         convert()
+    }
+
+    private fun observeNetwork() {
+        viewModelScope.launch {
+            connectivityObserver.observe().collect { status ->
+                val isAvailable = status == ConnectivityObserver.Status.Available
+
+                _state.value = _state.value.copy(
+                    isNetworkAvailable = isAvailable,
+                    showNoNetworkBanner = !isAvailable
+                )
+            }
+        }
     }
 
     fun updateAmountFrom(amount: String) {
@@ -74,6 +91,10 @@ class CurrencyConverterViewModel @Inject constructor(
         _state.value = _state.value.copy(error = null)
     }
 
+    fun dismissNoNetworkBanner() {
+        _state.value = _state.value.copy(showNoNetworkBanner = false)
+    }
+
     private fun mapError(e: Throwable): String {
         return when (e) {
             is HttpException -> {
@@ -83,10 +104,12 @@ class CurrencyConverterViewModel @Inject constructor(
                     else -> "Request failed. Please try again."
                 }
             }
+
             is UnknownHostException,
             is IOException -> {
                 "Check your internet connection and try again."
             }
+
             else -> {
                 "Something went wrong. Please try again."
             }
@@ -108,7 +131,6 @@ class CurrencyConverterViewModel @Inject constructor(
             return
         }
 
-
         viewModelScope.launch {
             _state.value = currentState.copy(loading = true, error = null)
 
@@ -123,16 +145,20 @@ class CurrencyConverterViewModel @Inject constructor(
                     amountFrom = String.format("%.2f", quote.amountFrom),
                     amountTo = String.format("%.2f", quote.amountTo),
                     rateText = "1 ${quote.fromCurrency} = ${quote.rate} ${quote.toCurrency}",
-                    loading = false,
+                    loading = false
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
+
+                val isNetworkError = e is UnknownHostException || e is IOException
+
                 _state.value = _state.value.copy(
                     loading = false,
-                    error = mapError(e)
+                    error = if (isNetworkError) null else mapError(e),
+                    isNetworkAvailable = !isNetworkError,
+                    showNoNetworkBanner = if (isNetworkError) true else _state.value.showNoNetworkBanner
                 )
             }
-
         }
     }
 
@@ -161,9 +187,14 @@ class CurrencyConverterViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 e.printStackTrace()
+
+                val isNetworkError = e is UnknownHostException || e is IOException
+
                 _state.value = _state.value.copy(
                     loading = false,
-                    error = mapError(e)
+                    error = if (isNetworkError) null else mapError(e),
+                    isNetworkAvailable = !isNetworkError,
+                    showNoNetworkBanner = if (isNetworkError) true else _state.value.showNoNetworkBanner
                 )
             }
         }
