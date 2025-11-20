@@ -16,16 +16,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.maciejweglarz.transfergoapp.R
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.converter.ConverterCard
+import com.maciejweglarz.transfergoapp.R
 import com.maciejweglarz.transfergoapp.core.model.Currencies
 import com.maciejweglarz.transfergoapp.core.model.Currency
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterCurrencyListDivider
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterErrorBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterErrorBorder
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterNetworkBannerBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterNetworkBannerText
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterReceiverBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterScreenBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterSubtitleText
 import com.maciejweglarz.transfergoapp.ui.theme.TransferGoAppTheme
 
 private enum class PickerTarget {
@@ -62,8 +69,8 @@ fun ConverterScreen(
     if (pickerTarget != null) {
 
         val title = when (pickerTarget) {
-            PickerTarget.FROM -> "Sending from"
-            PickerTarget.TO -> "Receiver gets"
+            PickerTarget.FROM -> stringResource(R.string.sending_from_text)
+            PickerTarget.TO -> stringResource(R.string.receiver_gets_text)
             null -> ""
         }
 
@@ -116,7 +123,7 @@ private fun ConverterScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE5E5E5))
+            .background(ConverterScreenBackground)
     ) {
         Column(
             modifier = Modifier
@@ -137,10 +144,10 @@ private fun ConverterScreenContent(
             val toCurrencyConfig = Currencies.getByCode(state.toCurrency)
 
             ConverterCard(
-                sendingLabel = "Sending from",
+                sendingLabel = stringResource(R.string.sending_from_text),
                 sendingCurrencyCode = state.fromCurrency,
                 sendingAmount = state.amountFrom,
-                receiverLabel = "Receiver gets",
+                receiverLabel = stringResource(R.string.receiver_gets_text),
                 receiverCurrencyCode = state.toCurrency,
                 receiverAmount = state.amountTo,
                 rateLabel = state.rateText,
@@ -169,7 +176,7 @@ private fun NetworkBanner(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFFFE5E5))
+            .background(ConverterNetworkBannerBackground)
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -186,21 +193,21 @@ private fun NetworkBanner(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "No network",
-                color = Color(0xFFB00020),
+                text = stringResource(R.string.network_banner_title_text),
+                color = ConverterNetworkBannerText,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Check your internet connection",
-                color = Color(0xFFB00020),
+                text = stringResource(R.string.network_banner_description_text),
+                color = ConverterNetworkBannerText,
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
         Image(
             painterResource(R.drawable.icon_close),
-            contentDescription = "Close banner",
+            contentDescription = stringResource(R.string.network_close_button_text),
             modifier = Modifier
                 .size(20.dp)
                 .clickable { onCloseClick() }
@@ -215,14 +222,14 @@ private fun ErrorBanner(message: String) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .background(
-                color = Color(0xFFFFF0F4),
+                color = ConverterErrorBackground,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(
             text = message,
-            color = Color(0xFFFF4F9A),
+            color = ConverterErrorBorder,
             style = MaterialTheme.typography.bodyMedium
         )
     }
@@ -245,7 +252,7 @@ private fun CurrencyPickerBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.95f) // stała wysokość, brak „kurczenia się” przy search
+                .fillMaxHeight(0.95f)
                 .padding(bottom = 16.dp)
         ) {
             Text(
@@ -261,9 +268,9 @@ private fun CurrencyPickerBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Search",
+                text = stringResource(R.string.search_basic_text),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8C9199),
+                color = ConverterSubtitleText,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -277,9 +284,9 @@ private fun CurrencyPickerBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "All countries",
+                text = stringResource(R.string.all_countries_basic_text),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8C9199),
+                color = ConverterSubtitleText,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -317,21 +324,19 @@ private fun CurrencyPickerBottomSheet(
                         Text(
                             text = "${currency.code} · ${currency.name}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF8C9199)
+                            color = ConverterSubtitleText
                         )
                     }
                 }
 
                 if (index < filteredCurrencies.lastIndex) {
                     androidx.compose.material3.HorizontalDivider(
-                        color = Color(0xFFE4E7EB),
+                        color = ConverterCurrencyListDivider,
                         thickness = 1.dp,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp)
                     )
                 }
             }
-
-
         }
     }
 }
@@ -348,7 +353,7 @@ private fun SearchField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(Color(0xFFEDF0F4), RoundedCornerShape(12.dp))
+            .background(ConverterReceiverBackground, RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         textStyle = MaterialTheme.typography.bodyMedium
     ) { inner ->
@@ -358,7 +363,7 @@ private fun SearchField(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.icon_search),
-                contentDescription = "Search",
+                contentDescription = stringResource(R.string.search_basic_text),
                 modifier = Modifier.size(16.dp)
             )
 
@@ -370,8 +375,8 @@ private fun SearchField(
             ) {
                 if (query.isEmpty()) {
                     Text(
-                        text = "Search",
-                        color = Color(0xFF8C9199),
+                        text = stringResource(R.string.search_basic_text),
+                        color = ConverterSubtitleText,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -380,7 +385,6 @@ private fun SearchField(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

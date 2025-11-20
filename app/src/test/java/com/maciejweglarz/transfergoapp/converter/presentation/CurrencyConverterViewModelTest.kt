@@ -63,7 +63,7 @@ private class FakeCurrencyRepository : CurrencyRepository {
     }
 }
 
-// ---- TESTY VIEWMODELU ----
+// ---- VIEWMODEL TESTS ----
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CurrencyConverterViewModelTest {
@@ -146,7 +146,7 @@ class CurrencyConverterViewModelTest {
 
         val state = viewModel.state.value
 
-        // then – znowu przecinki
+        // then
         assertEquals("PLN", state.fromCurrency)
         assertEquals("UAH", state.toCurrency)
         assertEquals("100,00", state.amountFrom)

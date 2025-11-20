@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.converter.ConverterCard
 import com.maciejweglarz.transfergoapp.converter.presentation.ConverterScreen
 import com.maciejweglarz.transfergoapp.ui.theme.TransferGoAppTheme
 import dagger.hilt.android.AndroidEntryPoint
