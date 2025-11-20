@@ -1,4 +1,4 @@
-package com.example.converter
+package com.maciejweglarz.transfergoapp.converter.presentation
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +33,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maciejweglarz.transfergoapp.R
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterCardBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterErrorBorder
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterRateChipBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterRateChipText
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterReceiverBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterScreenBackground
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterSendingAmount
+import com.maciejweglarz.transfergoapp.ui.theme.ConverterSubtitleText
 
 private val AppFont = FontFamily.SansSerif
 
@@ -65,7 +74,7 @@ fun ConverterCard(
                     if (hasError) {
                         Modifier.border(
                             width = 2.dp,
-                            color = Color(0xFFFF4F9A),
+                            color = ConverterErrorBorder,
                             shape = RoundedCornerShape(24.dp)
                         )
                     } else {
@@ -74,7 +83,7 @@ fun ConverterCard(
                 ),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF1F4F8)
+                containerColor = ConverterCardBackground
             ),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
@@ -88,7 +97,7 @@ fun ConverterCard(
                     amount = sendingAmount,
                     onAmountChange = onSendingAmountChange,
                     onCurrencyClick = onSendingCurrencyClick,
-                    amountColor = Color(0xFF0084FF),
+                    amountColor = ConverterSendingAmount,
                     backgroundColor = Color.White,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                     modifier = Modifier.weight(1f)
@@ -102,7 +111,7 @@ fun ConverterCard(
                     onAmountChange = onReceiverAmountChange,
                     onCurrencyClick = onReceiverCurrencyClick,
                     amountColor = Color.Black,
-                    backgroundColor = Color(0xFFEDF0F4),
+                    backgroundColor = ConverterReceiverBackground,
                     shape = null,
                     modifier = Modifier.weight(1f)
                 )
@@ -125,7 +134,7 @@ fun ConverterCard(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.reverse_button),
-                    contentDescription = "Reverse currencies",
+                    contentDescription = stringResource(R.string.reverse_currencies_text),
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -134,13 +143,13 @@ fun ConverterCard(
             Surface(
                 shape = CircleShape,
                 shadowElevation = 4.dp,
-                color = Color.Black
+                color = ConverterRateChipBackground
             ) {
                 Text(
                     text = rateLabel,
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 4.dp),
-                    color = Color.White,
+                    color = ConverterRateChipText,
                     fontSize = 12.sp,
                     fontFamily = AppFont
                 )
@@ -184,7 +193,7 @@ private fun CurrencySection(
                 Text(
                     text = title,
                     fontSize = 14.sp,
-                    color = Color(0xFF8C9199),
+                    color = ConverterSubtitleText,
                     fontFamily = AppFont
                 )
 
@@ -213,12 +222,12 @@ private fun CurrencySection(
                         fontFamily = AppFont,
                         fontWeight = FontWeight.SemiBold
                     )
-                    
-                    Spacer(modifier = Modifier.padding(4.dp))
+
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     Image(
                         painter = painterResource(R.drawable.icon_down),
-                        contentDescription = "Open currency picker",
+                        contentDescription = stringResource(R.string.currency_picker_text),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -232,7 +241,7 @@ private fun CurrencySection(
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
+                    keyboardType = KeyboardType.Decimal
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -287,7 +296,7 @@ fun ConverterCardPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE5E5E5))
+                .background(ConverterScreenBackground)
         ) {
             ConverterCard(
                 sendingLabel = "Sending from",
