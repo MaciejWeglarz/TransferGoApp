@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">TransferGoApp</string>
+
+    // Basic strings
+    <string name="sending_from_text">Sending from</string>
+    <string name="receiver_gets_text">Receiver gets"</string>
+    <string name="search_basic_text">Search</string>
+    <string name="all_countries_basic_text">All countries"</string>
+
+    // Network error banner
+    <string name="network_banner_title_text">No network</string>
+    <string name="network_banner_description_text">Check your internet connection</string>
+
+    // Accessibility text for buttons as contentDescription
+    <string name="reverse_currencies_text">Reverse currencies</string>
+    <string name="currency_picker_text">Open currency picker</string>
+    <string name="network_close_button_text">Close banner</string>
 </resources>
