@@ -7,22 +7,23 @@ import javax.inject.Inject
 
 class CurrencyRepositoryImpl @Inject constructor(
     private val api: TransferGoApiService
-): CurrencyRepository {
+) : CurrencyRepository {
+
     override suspend fun getQuote(
-        fromCurrency: String,
-        toCurrency: String,
+        from: String,
+        to: String,
         amount: Double
     ): FxQuote {
-
-        val response = api.getFxRates(fromCurrency, toCurrency, amount)
+        val response = api.getFxRates(from, to, amount)
 
         val rate = response.rate
-        val toAmount = response.toAmount
+        val fromAmount = response.fromAmount ?: amount
+        val toAmount = response.toAmount ?: rate * amount
 
         return FxQuote(
-            fromCurrency,
-            toCurrency = toCurrency,
-            amountFrom = amount,
+            fromCurrency = from,
+            toCurrency = to,
+            amountFrom = fromAmount,
             amountTo = toAmount,
             rate = rate
         )

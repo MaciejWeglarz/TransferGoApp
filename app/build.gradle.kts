@@ -70,6 +70,12 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
 
+    //Tests
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp3.mockwebserver)
+    testImplementation(libs.turbine)
+
+
     //Coil
     implementation(libs.coil)
 
